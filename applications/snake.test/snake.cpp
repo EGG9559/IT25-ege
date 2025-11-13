@@ -1,91 +1,88 @@
 #include <conio.h>
 #include <iostream>
 #include <windows.h>
-#include <time.h>
-#include <string>
+#include <cstdlib> // for rand()
+using namespace std;
 
 // height and width of the boundary
 const int width = 80;
 const int height = 20;
 
-// Snake head 
+// Snake head coordinates of snake (x-axis, y-axis)
 int x, y;
 // Food coordinates
 int fruitCordX, fruitCordY;
-// score
+// variable to store the score of the player
 int playerScore;
-// where snake tail is
+// Array to store the coordinates of snake tail (x-axis, y-axis)
 int snakeTailX[100], snakeTailY[100];
-// how tall he is
+// variable to store the length of the snake's tail
 int snakeTailLen;
-// snake direction
+// for storing snake's moving direction
 enum snakesDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
 // snakesDirection variable
 snakesDirection sDir;
 // boolean variable for checking game is over or not
 bool isGameOver;
 
-void GameInit()
-{
+// Function to initialize game variables
+void GameInit() {
     isGameOver = false;
     sDir = STOP;
     x = width / 2;
     y = height / 2;
-    fruitCordX = rand() % width;
-    fruitCordY = rand() % height;
+    fruitCordX = rand() % (width - 1);
+    fruitCordY = rand() % (height - 1);
     playerScore = 0;
+    snakeTailLen = 0;
 }
 
+// Function for creating the game board & rendering
+void GameRender(string playerName) {
+    // Clears the screen by printing new lines
+    cout << string(100, '\n');
 
-void GameRender(std::string playerName)
-{
-    system("cls"); 
-  
+    // Creating top walls with '-'
     for (int i = 0; i < width + 2; i++)
-        std::cout << "-";
-    std::cout << std::endl;
+        cout << "-";
+    cout << endl;
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j <= width; j++) {
             // Creating side walls with '|'
             if (j == 0 || j == width)
-                std::cout << "|";
-            // Creating snake's head with 'O'
-            if (i == y && j == x)
-                std::cout << "O";
-            // Creating the sanke's food with 'B'
+                cout << "|";
+            else if (i == y && j == x)
+                cout << "B"; // Snake's head
             else if (i == fruitCordY && j == fruitCordX)
-                std::cout << "B";
-            // Creating snake's head with 'O'
+                cout << "#"; // Fruit
             else {
                 bool prTail = false;
                 for (int k = 0; k < snakeTailLen; k++) {
-                    if (snakeTailX[k] == j
-                        && snakeTailY[k] == i) {
-                        std::cout << "o";
+                    if (snakeTailX[k] == j && snakeTailY[k] == i) {
+                        cout << "o"; // Snake tail
                         prTail = true;
+                        break;
                     }
                 }
                 if (!prTail)
-                    std::cout << " ";
+                    cout << " ";
             }
         }
-        std::cout << std::endl;
+        cout << endl;
     }
 
     // Creating bottom walls with '-'
     for (int i = 0; i < width + 2; i++)
-        std::cout << "-";
-    std::cout << std::endl;
+        cout << "-";
+    cout << endl;
 
-  
-    std::cout << playerName << "'s Score: " << playerScore << std::endl;
+    // Display player's score
+    cout << playerName << "'s Score: " << playerScore << endl;
 }
 
-
-//make funny game have fps
-void UpdateGame()
-{
+// Function for updating the game state
+void UpdateGame() {
     int prevX = snakeTailX[0];
     int prevY = snakeTailY[0];
     int prev2X, prev2Y;
@@ -114,45 +111,47 @@ void UpdateGame()
     case DOWN:
         y++;
         break;
+    default:
+        break;
     }
 
-    // did snake eat the wall (|)
+    // Checks for snake's collision with the wall (|)
     if (x >= width || x < 0 || y >= height || y < 0)
         isGameOver = true;
 
-    // did the tail hit a thing (o)
+    // Checks for collision with the tail (o)
     for (int i = 0; i < snakeTailLen; i++) {
         if (snakeTailX[i] == x && snakeTailY[i] == y)
             isGameOver = true;
     }
 
-    // did snake eat food (B)
+    // Checks for snake's collision with the food (#)
     if (x == fruitCordX && y == fruitCordY) {
         playerScore += 10;
-        fruitCordX = rand() % width;
-        fruitCordY = rand() % height;
+        fruitCordX = rand() % (width - 1);
+        fruitCordY = rand() % (height - 1);
         snakeTailLen++;
     }
 }
 
 // Function to set the game difficulty level
-int SetDifficulty()
-{
-    int dfc, choice;
-    std::cout << "\nSET DIFFICULTY\n1: Easy\n2: Medium\n3: hard "
-            "\nNOTE: if not chosen or pressed any other "
-            "key, the difficulty will be automatically set "
-            "to medium\nChoose difficulty level: ";
-    std::cin >> choice;
+int SetDifficulty() {
+    int dfc;
+    int choice;
+    cout << "\nSET DIFFICULTY\n1: Easy\n2: Medium\n3: Hard\n"
+         << "NOTE: If invalid choice, difficulty will be Medium\n"
+         << "Choose difficulty level: ";
+    cin >> choice;
+
     switch (choice) {
-    case '1':
-        dfc = 50;
+    case 1:
+        dfc = 150; // slower = easier
         break;
-    case '2':
+    case 2:
         dfc = 100;
         break;
-    case '3':
-        dfc = 150;
+    case 3:
+        dfc = 50; // faster = harder
         break;
     default:
         dfc = 100;
@@ -160,40 +159,39 @@ int SetDifficulty()
     return dfc;
 }
 
-//add difficulty here if needed
-
-// how top handle key inputs
-void UserInput()
-{
-    // did i press a button?
+// Function to handle user input
+void UserInput() {
     if (_kbhit()) {
-        // Getting the pressed key
         switch (_getch()) {
         case 'a':
+        case 'A':
             sDir = LEFT;
             break;
         case 'd':
+        case 'D':
             sDir = RIGHT;
             break;
         case 'w':
+        case 'W':
             sDir = UP;
             break;
         case 's':
+        case 'S':
             sDir = DOWN;
             break;
         case 'x':
+        case 'X':
             isGameOver = true;
             break;
         }
     }
 }
 
-// constant fps
-int main()
-{
-    std::string playerName;
-    std::cout << "Name yourself: ";
-    std::cin >> playerName;
+// Main function / game loop
+int main() {
+    string playerName;
+    cout << "Enter your name: ";
+    cin >> playerName;
     int dfc = SetDifficulty();
 
     GameInit();
@@ -201,10 +199,10 @@ int main()
         GameRender(playerName);
         UserInput();
         UpdateGame();
-        // creating a delay for according to the chosen
-        // difficulty
         Sleep(dfc);
     }
 
+    cout << "\nGame over! :Your silly score" << playerScore << endl;
+    _getch();
     return 0;
 }
